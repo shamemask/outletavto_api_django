@@ -5,7 +5,7 @@ import aiohttp
 import asyncio
 import pandas as pd
 
-from mainapp.object_model import Object
+from main_api.object_model import Object
 
 def dict_to_df(dct):
     df = pd.json_normalize(dct)
@@ -19,6 +19,7 @@ class ABCP:
     userpsw = "d0f938ccf1a7b3b5da427e26e2d33215"
     async def get_json(self, endpoint, **filters):
         url = f'https://id12480.public.api.abcp.ru/' + "/".join(endpoint.split("_"))
+        print(url+'?'+'')
         async with aiohttp.ClientSession() as session:
             async with session.get(url, params=filters) as response:
                 response_text = await response.text()
@@ -32,7 +33,9 @@ class ABCP:
     async def get_pd(self, endpoint, **kwargs):
         filters = {'userlogin': self.userlogin,'userpsw': self.userpsw} | kwargs
         return dict_to_df(await self.get_json(endpoint, **filters))
-
+    async def get_dict(self, endpoint, **kwargs):
+        filters = {'userlogin': self.userlogin,'userpsw': self.userpsw} | kwargs
+        return await self.get_json(endpoint, **filters)
 
 # Pr_Lg
 # /search/warehouses	GET	Получение списка складов
