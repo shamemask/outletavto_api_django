@@ -1,6 +1,11 @@
+import asyncio
 import os
 
+from asgiref.sync import sync_to_async
+from django.http import HttpResponse
 from django.shortcuts import render
+from django.views import View
+
 from .api_client import Pr_Lg, RosskoAPI, ABCP
 import pandas as pd
 from tabulate import tabulate
@@ -1105,11 +1110,38 @@ all_numbers =[
 ['000121','Хорс'],
 ['000122','Хорс'],
 ]
-async def ABCP_table(request, endpoint):
-    args_req = request.GET
-    context = await ABCP().get_dict(endpoint, **args_req)
-    # context = [context] if type(context) != list else context
-    return render(request, 'dftable.html', context={'html_table':context})
+
+class AsyncCatalog_table(View):
+    async def get(self, request, endpoint):
+        # Асинхронная функция для отрисовки шаблона
+        async def render_template():
+            table_list = []
+            args_req = request.GET
+            context = await ABCP().get_dict(endpoint, **args_req)
+            if isinstance(context, dict):
+                for k, v in context.items():
+                    if isinstance(v, dict):
+                        v['name'] = k
+                        table_list.append(v)
+                if not table_list:
+                    table_list.append(context)
+            elif isinstance(context, list):
+                table_list = context
+
+
+            df = pd.DataFrame(table_list)
+            # excel_filename = 'abcp_articles_info.xlsx'
+            # path_excel_filename = os.getcwd() + '\\xlsx\\' + excel_filename
+            # df = pd.read_excel(path_excel_filename)
+            # df = df[['number', 'images', 'brand']]
+            result_dict = df.to_dict(orient='records')
+            return await sync_to_async(render)(request, 'dftable.html', context={'html_table':result_dict})
+        # Получаем HTML-страницу из асинхронной функции
+        response_html = await render_template()
+
+        # Возвращаем HTTP-ответ
+        return HttpResponse(response_html)
+
 
 async def Pr_Lg_table(request, endpoint):
     args = request.GET
@@ -1122,26 +1154,40 @@ async def Rossko_table(request, endpoint):
     context = await RosskoAPI(endpoint).get_pd(endpoint,**args)
     return render(request, 'dftable.html', context)
 
-async def Catalog(request):
-    args = request.GET
-    data = [['55263'], ['3Ton']]
-    html_table = {}
-    table_list = []
-    i=0
-    for data in all_numbers:
-        dict_data = {'brand':data[1],'number':data[0],'format':['bni']}
-        response = await ABCP().get_dict('articles_info',**dict_data)
-        if 'images' in response:
-            response['images'] = 'http://pubimg.4mycar.ru/images/'+response['images'][0]['name'] if response['images'] else ''
-        table_list.append(response)
-        i+=1
-        if i == 2:
-            break
-    df = pd.DataFrame(table_list)
-    excel_filename = 'abcp_articles_info.xlsx'
-    path_excel_filename = os.getcwd()+'\\xlsx\\'+excel_filename
-    df = pd.read_excel(path_excel_filename)
-    df = df[['number','images','brand']]
-    result_dict = df.to_dict(orient='records')
-    # df.to_excel(path_excel_filename, index=False)
-    return render(request, 'dftable.html', context={'html_table':result_dict})
+class AsyncCatalog(View):
+    async def get(self, request):
+        async def get_data(data,):
+            dict_data = {'brand': data[1], 'number': data[0], 'format': ['bniphmt']}
+            response = await ABCP().get_dict('articles_info', **dict_data)
+            if 'images' in response:
+                response['images'] = '\n\r'.join(
+                    ['http://pubimg.4mycar.ru/images/' + v for k, v in response['images'] if k == 'name']) if response[
+                    'images'] else ''
+            if 'properties' in response:
+                response['properties'] = '\n\r'.join([f'{k}:{v}' for k, v in response['properties'].items()])
+            return response
+        # Асинхронная функция для отрисовки шаблона
+        async def render_template():
+            args = request.GET
+            data = [['55263'], ['3Ton']]
+            html_table = {}
+            table_list = []
+            tasks = []
+            for data in all_numbers:
+                tasks.append(get_data(data))
+                await asyncio.sleep(1)
+            table_list = await asyncio.gather(*tasks)
+            df = pd.DataFrame(table_list)
+            excel_filename = 'abcp_articles_info.xlsx'
+            path_excel_filename = os.getcwd()+'\\xlsx\\'+excel_filename
+            df.to_excel(path_excel_filename, index=False)
+            # df = pd.read_excel(path_excel_filename)
+            # df = df[['number','images','brand']]
+            result_dict = df.to_dict(orient='records')
+            # df.to_excel(path_excel_filename, index=False)
+            return await sync_to_async(render)(request, 'dftable.html', context={'html_table':result_dict})
+        # Получаем HTML-страницу из асинхронной функции
+        response_html = await render_template()
+
+        # Возвращаем HTTP-ответ
+        return HttpResponse(response_html)

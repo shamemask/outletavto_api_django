@@ -19,7 +19,7 @@ class ABCP:
     userpsw = "d0f938ccf1a7b3b5da427e26e2d33215"
     async def get_json(self, endpoint, **filters):
         url = f'https://id12480.public.api.abcp.ru/' + "/".join(endpoint.split("_"))
-        print(url+'?'+'')
+        print(url+'?'+'&'.join([f'{k}={v}' for k,v in filters.items() if k not in ['userlogin','userpsw']] ))
         async with aiohttp.ClientSession() as session:
             async with session.get(url, params=filters) as response:
                 response_text = await response.text()
