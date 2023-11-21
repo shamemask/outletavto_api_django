@@ -4,7 +4,7 @@ import datetime
 import aiohttp
 import asyncio
 import pandas as pd
-
+from .logging import logger
 from main_api.object_model import Object
 
 def dict_to_df(dct):
@@ -19,7 +19,7 @@ class ABCP:
     userpsw = "d0f938ccf1a7b3b5da427e26e2d33215"
     async def get_json(self, endpoint, **filters):
         url = f'https://id12480.public.api.abcp.ru/' + "/".join(endpoint.split("_"))
-        print(url+'?'+'&'.join([f'{k}={v}' for k,v in filters.items() if k not in ['userlogin','userpsw']] ))
+        logger.debug(url+'?'+'&'.join([f'{k}={v}' for k,v in filters.items() if k not in ['userlogin','userpsw']] ))
         async with aiohttp.ClientSession() as session:
             async with session.get(url, params=filters) as response:
                 response_text = await response.text()
@@ -2012,11 +2012,11 @@ class Moskvorechie:
 
 async def main():
     # objects = await Pr_Lg().get_list('warehouses')
-    # print(objects)
+    # logger.debug(objects)
 
     # client = RosskoAPIClient()
     # result = client.search('333114', '000000002', '112233')
-    # print(result)
+    # logger.debug(result)
 
     # rossko_api = RosskoAPI('GetCheckout')
     # delivery_id = '000000002'
@@ -2044,11 +2044,11 @@ async def main():
     # ]
     #
     # result = rossko_api.get_checkout(delivery_id, address_id, payment_id, requisite_id, name, phone, comment, parts)
-    # print(result)
+    # logger.debug(result)
 
     # api = RosskoAPI('GetCheckoutDetails')
     # response = api.get_checkout_details()
-    # print(response)
+    # logger.debug(response)
     return
 
 if __name__ == '__main__':
