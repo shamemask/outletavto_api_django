@@ -4,7 +4,11 @@ import os
 from asgiref.sync import sync_to_async
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
 from django.views import View
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.views import APIView
 
 from .api_client import Pr_Lg, RosskoAPI, ABCP
 import pandas as pd
@@ -1111,7 +1115,11 @@ all_numbers =[
 ['000122','Хорс'],
 ]
 
-class AsyncCatalog_table(View):
+class AsyncCatalog_table(APIView):
+    @method_decorator(swagger_auto_schema(
+        operation_description="Get data asynchronously",
+        responses={200: "OK - Data fetched asynchronously"},
+    ))
     async def get(self, request, endpoint):
         # Асинхронная функция для отрисовки шаблона
         async def render_template():
@@ -1154,7 +1162,7 @@ async def Rossko_table(request, endpoint):
     context = await RosskoAPI(endpoint).get_pd(endpoint,**args)
     return render(request, 'dftable.html', context)
 
-class AsyncCatalog(View):
+class AsyncCatalog(APIView):
     async def get(self, request):
         async def get_data(data,):
             dict_data = {'brand': data[1], 'number': data[0], 'format': ['bniphmt']}

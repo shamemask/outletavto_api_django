@@ -37,7 +37,7 @@ class ABCP:
         filters = {'userlogin': self.userlogin,'userpsw': self.userpsw} | kwargs
         return await self.get_json(endpoint, **filters)
 
-# Pr_Lg
+# Pr_Lg Профит лига
 # /search/warehouses	GET	Получение списка складов
 # https://api.pr-lg.ru/search/warehouses?secret=LRwcBJHfEWlsCekJGPievDGwhjuxbpDl&action=list
 # Параметр	Тип	Описание
