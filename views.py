@@ -5,14 +5,11 @@ from asgiref.sync import sync_to_async
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
-from django.views import View
-from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.views import APIView
 
 from .api_client import Pr_Lg, RosskoAPI, ABCP
 import pandas as pd
-from tabulate import tabulate
 import json
 all_numbers =[
 ['55263','3Ton'],
