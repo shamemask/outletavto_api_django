@@ -1,0 +1,10 @@
+__pycache__/__init__.cpython-311.pyc
+__pycache__/admin.cpython-311.pyc
+__pycache__/api_client.cpython-311.pyc
+__pycache__/apps.cpython-311.pyc
+__pycache__/logging.cpython-311.pyc
+__pycache__/models.cpython-311.pyc
+__pycache__/object_model.cpython-311.pyc
+__pycache__/urls.cpython-311.pyc
+__pycache__/views.cpython-311.pyc
+migrations/__pycache__/__init__.cpython-311.pyc
